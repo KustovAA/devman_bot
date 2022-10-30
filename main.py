@@ -1,6 +1,7 @@
+import time
+
 from environs import Env
 import requests
-
 import telegram
 
 if __name__ == '__main__':
@@ -20,7 +21,10 @@ if __name__ == '__main__':
         try:
             response = requests.get('https://dvmn.org/api/long_polling/', headers=headers, params=params)
             response.raise_for_status()
-        except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError):
+        except requests.exceptions.ReadTimeout:
+            continue
+        except requests.exceptions.ConnectionError:
+            time.sleep(1)
             continue
 
         data = response.json()
