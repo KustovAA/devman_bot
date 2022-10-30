@@ -7,15 +7,10 @@ import telegram
 
 
 class LogsHandler(logging.Handler):
-    def __init__(self):
+    def __init__(self, token, chat_id):
         super().__init__()
-
-        env = Env()
-        env.read_env()
-        tg_bot_token = env.str('TG_BOT_TOKEN')
-        tg_chat_id = env.int('TG_USER_CHAT_ID')
-        self.bot = telegram.Bot(token=tg_bot_token)
-        self.chat_id = tg_chat_id
+        self.bot = telegram.Bot(token=token)
+        self.chat_id = chat_id
 
     def emit(self, record):
         log_entry = self.format(record)
@@ -29,16 +24,19 @@ class LogsHandler(logging.Handler):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger('devman-bot')
-    logger.setLevel(logging.INFO)
-    logger.addHandler(LogsHandler())
-
     env = Env()
     env.read_env()
 
+    tg_bot_token = env.str('TG_BOT_TOKEN')
+    tg_chat_id = env.int('TG_USER_CHAT_ID')
     access_token = env.str('DEVMAN_ACCESS_TOKEN')
-    logger.info('env variable DEVMAN_ACCESS_TOKEN has bean read')
+
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger('devman-bot')
+    logger.setLevel(logging.INFO)
+    logger.addHandler(LogsHandler(tg_bot_token, tg_chat_id))
+
+    logger.info('bot restarted')
 
     headers = {'Authorization': f'Token {access_token}'}
     params = {}
