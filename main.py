@@ -43,7 +43,6 @@ if __name__ == '__main__':
 
     while True:
         try:
-            0 / 0
             try:
                 response = requests.get('https://dvmn.org/api/long_polling/', headers=headers, params=params)
                 response.raise_for_status()
