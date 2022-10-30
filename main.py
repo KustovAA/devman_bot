@@ -27,12 +27,12 @@ if __name__ == '__main__':
             time.sleep(1)
             continue
 
-        data = response.json()
+        review = response.json()
 
-        if data['status'] == 'found':
-            last_attempt_timestamp = data['last_attempt_timestamp']
+        if review['status'] == 'found':
+            last_attempt_timestamp = review['last_attempt_timestamp']
             params['timestamp'] = last_attempt_timestamp
-            attempt = data['new_attempts'][0]
+            attempt = review['new_attempts'][0]
             lesson_title = attempt['lesson_title']
             is_negative = attempt['is_negative']
             if is_negative:
@@ -44,8 +44,8 @@ if __name__ == '__main__':
                 chat_id=tg_chat_id,
                 text=f'У вас проверили работу "{lesson_title}"\n\n{verdict}'
             )
-        elif data['status'] == 'timeout':
-            timestamp_to_request = data['timestamp_to_request']
+        elif review['status'] == 'timeout':
+            timestamp_to_request = review['timestamp_to_request']
             params['timestamp'] = timestamp_to_request
         else:
             params = {}
