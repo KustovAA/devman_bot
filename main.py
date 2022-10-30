@@ -43,31 +43,36 @@ if __name__ == '__main__':
 
     while True:
         try:
-            response = requests.get('https://dvmn.org/api/long_polling/', headers=headers, params=params)
-            response.raise_for_status()
-        except requests.exceptions.ReadTimeout:
-            continue
-        except requests.exceptions.ConnectionError:
-            time.sleep(1)
-            continue
+            0 / 0
+            try:
+                response = requests.get('https://dvmn.org/api/long_polling/', headers=headers, params=params)
+                response.raise_for_status()
+            except requests.exceptions.ReadTimeout as err:
+                logger.exception(err, exc_info=True)
+                continue
+            except requests.exceptions.ConnectionError as err:
+                logger.error(err, exc_info=True)
+                time.sleep(1)
+                continue
 
-        review = response.json()
+            review = response.json()
 
-        if review['status'] == 'found':
-            last_attempt_timestamp = review['last_attempt_timestamp']
-            params['timestamp'] = last_attempt_timestamp
-            attempt = review['new_attempts'][0]
-            lesson_title = attempt['lesson_title']
-            is_negative = attempt['is_negative']
-            if is_negative:
-                verdict = 'К сожалению в работе нашлись ошибки'
+            if review['status'] == 'found':
+                last_attempt_timestamp = review['last_attempt_timestamp']
+                params['timestamp'] = last_attempt_timestamp
+                attempt = review['new_attempts'][0]
+                lesson_title = attempt['lesson_title']
+                is_negative = attempt['is_negative']
+                if is_negative:
+                    verdict = 'К сожалению в работе нашлись ошибки'
+                else:
+                    verdict = 'Преподавателю все понравилось, можно приступать в слелующему уроку!'
+
+                logger.info(f'У вас проверили работу "{lesson_title}"\n\n{verdict}')
+            elif review['status'] == 'timeout':
+                timestamp_to_request = review['timestamp_to_request']
+                params['timestamp'] = timestamp_to_request
             else:
-                verdict = 'Преподавателю все понравилось, можно приступать в слелующему уроку!'
-
-            logger.info(f'У вас проверили работу "{lesson_title}"\n\n{verdict}')
-        elif review['status'] == 'timeout':
-            timestamp_to_request = review['timestamp_to_request']
-            params['timestamp'] = timestamp_to_request
-        else:
-            params = {}
-
+                params = {}
+        except Exception as err:
+            logger.exception(err, exc_info=True)
