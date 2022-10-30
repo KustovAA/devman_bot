@@ -1,3 +1,4 @@
+import logging
 import time
 
 from environs import Env
@@ -5,12 +6,16 @@ import requests
 import telegram
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
     env = Env()
     env.read_env()
 
     tg_bot_token = env.str('TG_BOT_TOKEN')
+    logging.info('env variable TG_BOT_TOKEN has bean read')
     tg_chat_id = env.int('TG_USER_CHAT_ID')
+    logging.info('env variable TG_USER_CHAT_ID has bean read')
     access_token = env.str('DEVMAN_ACCESS_TOKEN')
+    logging.info('env variable DEVMAN_ACCESS_TOKEN has bean read')
 
     bot = telegram.Bot(token=tg_bot_token)
 
