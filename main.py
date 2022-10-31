@@ -7,25 +7,17 @@ import telegram
 
 
 class LogsHandler(logging.Handler):
-    def __init__(self, send_message):
+    def __init__(self, bot, chat_id):
         super().__init__()
-        self.send_message = send_message
+        self.bot = bot
+        self.chat_id = chat_id
 
     def emit(self, record):
         log_entry = self.format(record)
 
-        self.send_message(log_entry)
+        self.bot.send_message(chat_id=self.chat_id, text=log_entry)
 
         return log_entry
-
-
-def send_message_factory(token, chat_id):
-    bot = telegram.Bot(token=token)
-
-    def send_message(text):
-        return bot.send_message(chat_id=chat_id, text=text)
-
-    return send_message
 
 
 if __name__ == '__main__':
@@ -36,12 +28,12 @@ if __name__ == '__main__':
     tg_chat_id = env.int('TG_USER_CHAT_ID')
     access_token = env.str('DEVMAN_ACCESS_TOKEN')
 
-    send_message = send_message_factory(tg_bot_token, tg_chat_id)
+    bot = telegram.Bot(token=tg_bot_token)
 
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger('devman-bot')
     logger.setLevel(logging.INFO)
-    logger.addHandler(LogsHandler(send_message))
+    logger.addHandler(LogsHandler(bot, tg_chat_id))
 
     logger.info('bot restarted')
 
@@ -74,7 +66,7 @@ if __name__ == '__main__':
                 else:
                     verdict = 'Преподавателю все понравилось, можно приступать в слелующему уроку!'
 
-                send_message(f'У вас проверили работу "{lesson_title}"\n\n{verdict}')
+                bot.send_message(chat_id=tg_chat_id, text=f'У вас проверили работу "{lesson_title}"\n\n{verdict}')
             elif review['status'] == 'timeout':
                 timestamp_to_request = review['timestamp_to_request']
                 params['timestamp'] = timestamp_to_request
