@@ -7,20 +7,25 @@ import telegram
 
 
 class LogsHandler(logging.Handler):
-    def __init__(self, token, chat_id):
+    def __init__(self, send_message):
         super().__init__()
-        self.bot = telegram.Bot(token=token)
-        self.chat_id = chat_id
+        self.send_message = send_message
 
     def emit(self, record):
         log_entry = self.format(record)
 
-        self.bot.send_message(
-            chat_id=self.chat_id,
-            text=log_entry
-        )
+        self.send_message(log_entry)
 
         return log_entry
+
+
+def send_message_factory(token, chat_id):
+    bot = telegram.Bot(token=token)
+
+    def send_message(text):
+        return bot.send_message(chat_id=chat_id, text=text)
+
+    return send_message
 
 
 if __name__ == '__main__':
@@ -31,10 +36,12 @@ if __name__ == '__main__':
     tg_chat_id = env.int('TG_USER_CHAT_ID')
     access_token = env.str('DEVMAN_ACCESS_TOKEN')
 
+    send_message = send_message_factory(tg_bot_token, tg_chat_id)
+
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger('devman-bot')
     logger.setLevel(logging.INFO)
-    logger.addHandler(LogsHandler(tg_bot_token, tg_chat_id))
+    logger.addHandler(LogsHandler(send_message))
 
     logger.info('bot restarted')
 
@@ -47,7 +54,7 @@ if __name__ == '__main__':
                 response = requests.get('https://dvmn.org/api/long_polling/', headers=headers, params=params)
                 response.raise_for_status()
             except requests.exceptions.ReadTimeout as err:
-                logger.exception(err, exc_info=True)
+                logger.error(err, exc_info=True)
                 continue
             except requests.exceptions.ConnectionError as err:
                 logger.error(err, exc_info=True)
@@ -67,11 +74,11 @@ if __name__ == '__main__':
                 else:
                     verdict = 'Преподавателю все понравилось, можно приступать в слелующему уроку!'
 
-                logger.info(f'У вас проверили работу "{lesson_title}"\n\n{verdict}')
+                send_message(f'У вас проверили работу "{lesson_title}"\n\n{verdict}')
             elif review['status'] == 'timeout':
                 timestamp_to_request = review['timestamp_to_request']
                 params['timestamp'] = timestamp_to_request
             else:
                 params = {}
         except Exception as err:
-            logger.exception(err, exc_info=True)
+            logger.error(err, exc_info=True)
