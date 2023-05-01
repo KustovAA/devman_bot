@@ -17,3 +17,8 @@
 Команда для запуска:
 
 * ```python main.py```
+
+Запуск с помощью docker:
+
+* ```docker build -t devman-bot .``` - build docker образа
+* ```docker run --env-file .env devman-bot``` - start docker контейнера
